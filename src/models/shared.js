@@ -1,5 +1,7 @@
+import { RawImage } from '@huggingface/transformers';
+
 export async function tensorMaskToBlob(maskTensor, origWidth, origHeight) {
-  const mask = await maskTensor.resize(origWidth, origHeight);
+  const mask = await RawImage.fromTensor(maskTensor).resize(origWidth, origHeight);
 
   const canvas = new OffscreenCanvas(origWidth, origHeight);
   const ctx = canvas.getContext('2d');

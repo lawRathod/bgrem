@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#1f7a51" />
+        <meta name="theme-color" content="#0a0a0a" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
@@ -11,92 +11,86 @@
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
             rel="stylesheet"
         />
     </head>
     <body>
-        <main class="shell">
-            <section class="panel">
-                <header class="panel-header">
-                    <p class="eyebrow">In-browser segmentation</p>
-                    <h1>
-                        Generate a clean <code>mask.png</code> from any photo.
-                    </h1>
-                    <p class="subhead">
-                        Upload or paste an image URL, run the model fully
-                        client-side, then compare original and mask side by
-                        side.
-                    </p>
-                </header>
-
-                <div
-                    class="net-led"
-                    id="networkLed"
-                    data-state="online"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span class="dot" aria-hidden="true"></span>
-                    <span class="label">Network: online</span>
+        <main class="app">
+            <header class="app-header">
+                <h1>Background Removal</h1>
+                <div id="networkLed" class="net-led" data-state="online">
+                    <span class="net-dot"></span>
+                    <span class="net-label">Online</span>
                 </div>
+            </header>
 
-                <div class="controls">
-                    <label class="file-input">
-                        <span>Choose image</span>
-                        <input id="imageInput" type="file" accept="image/*" />
-                    </label>
-                    <div class="url-loader">
-                        <input
-                            id="imageUrlInput"
-                            type="url"
-                            inputmode="url"
-                            placeholder="https://example.com/photo.jpg"
-                        />
-                        <button
-                            id="loadUrlButton"
-                            type="button"
-                            class="secondary"
-                        >
-                            Load URL
-                        </button>
-                    </div>
-                    <label class="model-selector">
-                        <span>Model</span>
-                        <select id="modelSelect"></select>
-                    </label>
-                    <button id="generateButton" type="button">
-                        Generate mask
-                    </button>
-                    <a
-                        id="downloadMask"
-                        class="download hidden"
-                        download="mask.png"
-                        >Download mask.png</a
-                    >
+            <div class="toolbar">
+                <div class="mode-toggle">
+                    <button type="button" class="mode-btn active" data-mode="single">Single</button>
+                    <button type="button" class="mode-btn" data-mode="benchmark">Benchmark</button>
                 </div>
+            </div>
 
-                <p id="status" class="status">Select an image to begin.</p>
-                <p id="modelInfo" class="model-info" aria-live="polite"></p>
+            <div class="input-row">
+                <label class="file-drop">
+                    <input id="imageInput" type="file" accept="image/*" />
+                    <span class="file-label">Choose image</span>
+                </label>
+                <div class="url-input">
+                    <input
+                        id="imageUrlInput"
+                        type="url"
+                        inputmode="url"
+                        placeholder="Paste image URL…"
+                    />
+                    <button id="loadUrlButton" type="button">Load</button>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <label class="select-wrap">
+                    <select id="modelSelect"></select>
+                </label>
+                <button id="generateButton" type="button">Generate</button>
+                <a id="downloadMask" class="download-btn hidden" download="mask.png">Download</a>
+            </div>
+
+            <p id="status" class="status">Select an image to begin.</p>
+            <p id="modelInfo" class="model-info"></p>
+
+            <section id="previewSection" class="previews hidden">
+                <div id="sourceCard" class="preview hidden">
+                    <span class="preview-tag">Original</span>
+                    <img id="sourcePreview" class="preview-img" alt="Original" />
+                </div>
+                <div id="maskCard" class="preview hidden">
+                    <span class="preview-tag">Mask</span>
+                    <img id="maskPreview" class="preview-img" alt="Mask" />
+                </div>
             </section>
 
-            <section id="previewSection" class="preview-grid hidden">
-                <article id="sourceCard" class="preview-card hidden">
-                    <h2>Original</h2>
-                    <img
-                        id="sourcePreview"
-                        class="preview-image"
-                        alt="Selected image preview"
-                    />
-                </article>
-                <article id="maskCard" class="preview-card hidden">
-                    <h2>Mask</h2>
-                    <img
-                        id="maskPreview"
-                        class="preview-image"
-                        alt="Generated mask preview"
-                    />
-                </article>
+            <section id="benchmarkSection" class="benchmark hidden">
+                <div class="benchmark-header">
+                    <h2>Benchmark Results</h2>
+                    <button id="clearBenchmark" type="button" class="ghost-btn">Clear</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="benchmarkTable">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Size</th>
+                                <th>Load</th>
+                                <th>Inference</th>
+                                <th>Total</th>
+                                <th>License</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmarkBody"></tbody>
+                    </table>
+                </div>
             </section>
         </main>
 

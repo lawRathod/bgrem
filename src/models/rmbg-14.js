@@ -1,5 +1,4 @@
 import { AutoModel, AutoProcessor, RawImage } from '@huggingface/transformers';
-import { tensorMaskToBlob } from './shared.js';
 
 export const meta = {
   modelId: 'briaai/RMBG-1.4',
@@ -48,9 +47,22 @@ export function createRmbg14() {
     const { pixel_values } = await processor(image);
     const { output } = await model({ input: pixel_values });
 
-    const mask = output[0].mul(255).to('uint8');
+    const mask = await RawImage.fromTensor(
+      output[0].mul(255).to('uint8'),
+    ).resize(image.width, image.height);
 
-    return tensorMaskToBlob(mask, image.width, image.height);
+    const canvas = new OffscreenCanvas(image.width, image.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image.toCanvas(), 0, 0);
+    const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+    for (let i = 0; i < mask.data.length; i++) {
+      imageData.data[4 * i + 3] = mask.data[i];
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    return canvas.convertToBlob({ type: 'image/png' });
   }
 
   return {

@@ -13,7 +13,9 @@ export function createUI() {
   const maskCard = document.getElementById('maskCard');
   const downloadMask = document.getElementById('downloadMask');
   const networkLed = document.getElementById('networkLed');
-  const networkLabel = networkLed?.querySelector('.label');
+  const benchmarkSection = document.getElementById('benchmarkSection');
+  const benchmarkBody = document.getElementById('benchmarkBody');
+  const clearBenchmark = document.getElementById('clearBenchmark');
 
   let generatedMaskURL = '';
 
@@ -39,7 +41,7 @@ export function createUI() {
     }
 
     generateButton.disabled = isLoading;
-    generateButton.textContent = isLoading ? 'Generating...' : 'Generate mask';
+    generateButton.textContent = isLoading ? 'Generating…' : 'Generate';
   }
 
   function setUrlLoading(isLoading) {
@@ -48,7 +50,7 @@ export function createUI() {
     }
 
     loadUrlButton.disabled = isLoading;
-    loadUrlButton.textContent = isLoading ? 'Loading...' : 'Load URL';
+    loadUrlButton.textContent = isLoading ? '…' : 'Load';
   }
 
   function setSourcePreview(url) {
@@ -97,12 +99,15 @@ export function createUI() {
   }
 
   function setNetworkState(state, label) {
-    if (!networkLed || !networkLabel) {
+    if (!networkLed) {
       return;
     }
 
     networkLed.dataset.state = state;
-    networkLabel.textContent = label;
+    const labelEl = networkLed.querySelector('.net-label');
+    if (labelEl) {
+      labelEl.textContent = label;
+    }
   }
 
   function setModelOptions(models) {
@@ -135,6 +140,41 @@ export function createUI() {
     modelInfo.textContent = text;
   }
 
+  function setMode(mode) {
+    const btns = document.querySelectorAll('.mode-btn');
+    btns.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+  }
+
+  function setBenchmarkResults(rows) {
+    if (!benchmarkSection || !benchmarkBody) {
+      return;
+    }
+
+    if (rows.length === 0) {
+      benchmarkSection.classList.add('hidden');
+      return;
+    }
+
+    benchmarkSection.classList.remove('hidden');
+    benchmarkBody.innerHTML = '';
+
+    rows.forEach((row) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="cell-name">${row.name}</td>
+        <td class="cell-mono">${row.size}</td>
+        <td class="cell-mono">${row.loadTime}</td>
+        <td class="cell-mono">${row.inferenceTime}</td>
+        <td class="cell-mono">${row.totalTime}</td>
+        <td class="cell-mono">${row.license}</td>
+        <td class="cell-status ${row.status === 'error' ? 'status-error' : ''}">${row.status}</td>
+      `;
+      benchmarkBody.appendChild(tr);
+    });
+  }
+
   return {
     imageInput,
     imageUrlInput,
@@ -151,5 +191,9 @@ export function createUI() {
     setModelOptions,
     setModelValue,
     setModelInfo,
+    setMode,
+    setBenchmarkResults,
+    benchmarkSection,
+    clearBenchmark,
   };
 }

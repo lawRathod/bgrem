@@ -1,5 +1,5 @@
 import './styles.css';
-import { env, ModelRegistry } from '@huggingface/transformers';
+import { env } from '@huggingface/transformers';
 import { createModelRegistry } from './models/model-registry.js';
 import { createIsnetOnnx, meta as isnetMeta } from './models/isnet-onnx.js';
 import { createRmbg14, meta as rmbgMeta } from './models/rmbg-14.js';
@@ -60,8 +60,30 @@ async function fetchModelSizes() {
 fetchModelSizes();
 
 let selectedImageURL = '';
+let currentMode = 'single';
+let benchmarkResults = [];
 
 registerServiceWorker();
+
+ui.clearBenchmark?.addEventListener('click', () => {
+  benchmarkResults = [];
+  ui.setBenchmarkResults([]);
+  ui.setModelInfo('');
+});
+
+document.querySelectorAll('.mode-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    currentMode = btn.dataset.mode;
+    ui.setMode(currentMode);
+    ui.clearMask();
+    ui.setModelInfo('');
+    if (currentMode === 'single') {
+      ui.setStatus(selectedImageURL ? 'Image loaded. Click "Generate".' : 'Select an image to begin.');
+    } else {
+      ui.setStatus(selectedImageURL ? 'Image loaded. Click "Generate" to run all models.' : 'Select an image to begin.');
+    }
+  });
+});
 
 function clearSelectedImageURL() {
   if (!selectedImageURL) {
@@ -77,7 +99,7 @@ function useSelectedImageBlob(blob, sourceLabel) {
   selectedImageURL = URL.createObjectURL(blob);
   ui.setSourcePreview(selectedImageURL);
   ui.clearMask();
-  ui.setStatus(`${sourceLabel} loaded. Click "Generate mask".`);
+  ui.setStatus(`${sourceLabel} loaded. Click "Generate".`);
 }
 
 ui.imageInput?.addEventListener('change', () => {
@@ -157,6 +179,10 @@ function formatMs(ms) {
 }
 
 function formatBytes(bytes) {
+  if (!bytes) {
+    return '—';
+  }
+
   if (bytes < 1024 * 1024) {
     return `${(bytes / 1024).toFixed(0)} KB`;
   }
@@ -164,21 +190,16 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
 }
 
-ui.generateButton?.addEventListener('click', async () => {
-  if (!selectedImageURL) {
-    ui.setStatus('Please select an image first.');
-    return;
-  }
-
+async function runSingleModel() {
   ui.setGenerateLoading(true);
   ui.clearMask();
 
   try {
-    ui.setStatus('Loading model...');
+    ui.setStatus('Loading model…');
     await yieldToPaint();
     const { cached } = await registry.init();
     networkLed.markOfflineReady();
-    ui.setStatus('Running inference in your browser...');
+    ui.setStatus('Running inference…');
 
     const maskBlob = await registry.run(selectedImageURL);
     ui.setMask(maskBlob);
@@ -187,17 +208,87 @@ ui.generateButton?.addEventListener('click', async () => {
     const parts = [
       metrics.name,
       cached ? '(cached)' : '',
-      `Loaded in ${formatMs(metrics.loadTimeMs)}`,
+      `Load: ${formatMs(metrics.loadTimeMs)}`,
       `Inference: ${formatMs(metrics.inferenceTimeMs)}`,
       metrics.license,
     ].filter(Boolean);
 
-    ui.setModelInfo(parts.join(' · '));
-    ui.setStatus('Done. Preview updated and mask.png is ready to download.');
+    ui.setModelInfo(parts.join('  ·  '));
+    ui.setStatus('Done.');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    ui.setStatus(`Failed to generate mask: ${message}`);
+    ui.setStatus(`Failed: ${message}`);
   } finally {
     ui.setGenerateLoading(false);
+  }
+}
+
+async function runBenchmark() {
+  benchmarkResults = [];
+  ui.setBenchmarkResults([]);
+  ui.setGenerateLoading(true);
+  ui.clearMask();
+
+  for (const entry of modelEntries) {
+    const name = entry.create().name;
+    registry.selectModel(name);
+    registry.reset();
+
+    ui.setStatus(`Running ${name}…`);
+    await yieldToPaint();
+
+    const t0 = performance.now();
+    try {
+      await registry.init();
+      const maskBlob = await registry.run(selectedImageURL);
+      const totalMs = performance.now() - t0;
+      const metrics = registry.getMetrics();
+
+      benchmarkResults.push({
+        name,
+        size: formatBytes(entry.meta.estimatedSize),
+        loadTime: formatMs(metrics.loadTimeMs),
+        inferenceTime: formatMs(metrics.inferenceTimeMs),
+        totalTime: formatMs(totalMs),
+        license: metrics.license,
+        status: 'OK',
+      });
+
+      if (name === registry.getSelectedModel()) {
+        ui.setMask(maskBlob);
+      }
+    } catch (error) {
+      const totalMs = performance.now() - t0;
+      const message = error instanceof Error ? error.message : String(error);
+
+      benchmarkResults.push({
+        name,
+        size: formatBytes(entry.meta.estimatedSize),
+        loadTime: '—',
+        inferenceTime: '—',
+        totalTime: formatMs(totalMs),
+        license: entry.meta.license,
+        status: `Error: ${message.slice(0, 40)}`,
+      });
+    }
+
+    ui.setBenchmarkResults(benchmarkResults);
+  }
+
+  networkLed.markOfflineReady();
+  ui.setGenerateLoading(false);
+  ui.setStatus(`Benchmark complete — ${benchmarkResults.filter((r) => r.status === 'OK').length}/${benchmarkResults.length} succeeded.`);
+}
+
+ui.generateButton?.addEventListener('click', async () => {
+  if (!selectedImageURL) {
+    ui.setStatus('Please select an image first.');
+    return;
+  }
+
+  if (currentMode === 'benchmark') {
+    await runBenchmark();
+  } else {
+    await runSingleModel();
   }
 });
