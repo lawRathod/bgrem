@@ -2,15 +2,15 @@ import { env, pipeline } from '@huggingface/transformers';
 
 env.allowLocalModels = false;
 
-export function createIsnetOnnx(options = {}) {
+export function createModnet(options = {}) {
   let segmenterPromise = null;
 
   const device = options.device ?? 'wasm';
-  const dtype = options.dtype ?? 'q8';
+  const dtype = options.dtype ?? 'fp32';
 
   async function init() {
     if (!segmenterPromise) {
-      segmenterPromise = pipeline('background-removal', 'onnx-community/ISNet-ONNX', {
+      segmenterPromise = pipeline('background-removal', 'Xenova/modnet', {
         device,
         dtype,
       });
@@ -47,7 +47,7 @@ export function createIsnetOnnx(options = {}) {
   }
 
   return {
-    name: 'ISNet-ONNX',
+    name: 'MODNet',
     init,
     run,
   };

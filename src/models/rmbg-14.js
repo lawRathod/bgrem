@@ -1,15 +1,20 @@
 import { AutoModel, AutoProcessor, RawImage } from '@huggingface/transformers';
 
-export function createRmbg14() {
+export function createRmbg14(options = {}) {
   let model = null;
   let processor = null;
   let loadPromise = null;
+
+  const device = options.device ?? 'wasm';
+  const dtype = options.dtype ?? 'fp32';
 
   async function init() {
     if (!loadPromise) {
       loadPromise = Promise.all([
         AutoModel.from_pretrained('briaai/RMBG-1.4', {
           config: { model_type: 'custom' },
+          device,
+          dtype,
         }),
         AutoProcessor.from_pretrained('briaai/RMBG-1.4', {
           config: {

@@ -3,8 +3,8 @@ export function createModelRegistry() {
   let selectedName = null;
   let instance = null;
 
-  function registerModel(createModel) {
-    const model = createModel();
+  function registerModel(createModel, options = {}) {
+    const model = createModel(options);
     factories.push(model);
 
     if (!selectedName) {
@@ -60,6 +60,10 @@ export function createModelRegistry() {
     return instance.run(imageUrl);
   }
 
+  function reset() {
+    instance = null;
+  }
+
   return {
     registerModel,
     getAvailableModels,
@@ -67,5 +71,6 @@ export function createModelRegistry() {
     getSelectedModel,
     init,
     run,
+    reset,
   };
 }

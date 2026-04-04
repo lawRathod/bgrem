@@ -2,6 +2,9 @@ import './styles.css';
 import { createModelRegistry } from './models/model-registry.js';
 import { createIsnetOnnx } from './models/isnet-onnx.js';
 import { createRmbg14 } from './models/rmbg-14.js';
+import { createModnet } from './models/modnet.js';
+import { createBirefnetLite } from './models/birefnet-lite.js';
+import { createBirefnet } from './models/birefnet.js';
 import { createUI } from './ui.js';
 import { createNetworkLed } from './network-led.js';
 import { registerServiceWorker } from './pwa.js';
@@ -10,8 +13,17 @@ const ui = createUI();
 const networkLed = createNetworkLed(ui.setNetworkState);
 const registry = createModelRegistry();
 
-registry.registerModel(createIsnetOnnx);
-registry.registerModel(createRmbg14);
+let currentDevice = 'wasm';
+
+function registerModels() {
+  registry.registerModel(createIsnetOnnx, { device: currentDevice });
+  registry.registerModel(createRmbg14, { device: currentDevice });
+  registry.registerModel(createModnet, { device: currentDevice });
+  registry.registerModel(createBirefnetLite, { device: currentDevice });
+  registry.registerModel(createBirefnet, { device: currentDevice });
+}
+
+registerModels();
 
 const availableModels = registry.getAvailableModels();
 ui.setModelOptions(availableModels.map((m) => ({ value: m.name, label: m.name })));
@@ -19,6 +31,13 @@ ui.setModelValue(registry.getSelectedModel());
 
 ui.modelSelect?.addEventListener('change', () => {
   registry.selectModel(ui.modelSelect.value);
+});
+
+ui.deviceSelect?.addEventListener('change', () => {
+  currentDevice = ui.deviceSelect.value;
+  registry.reset();
+  registry.selectModel(ui.modelSelect.value);
+  ui.setStatus(`Device switched to ${currentDevice.toUpperCase()}. Click "Generate mask".`);
 });
 
 let selectedImageURL = '';

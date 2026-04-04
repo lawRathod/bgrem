@@ -3,6 +3,7 @@ export function createUI() {
   const imageUrlInput = document.getElementById('imageUrlInput');
   const loadUrlButton = document.getElementById('loadUrlButton');
   const modelSelect = document.getElementById('modelSelect');
+  const deviceSelect = document.getElementById('deviceSelect');
   const generateButton = document.getElementById('generateButton');
   const statusElement = document.getElementById('status');
   const sourcePreview = document.getElementById('sourcePreview');
@@ -131,6 +132,7 @@ export function createUI() {
     imageUrlInput,
     loadUrlButton,
     modelSelect,
+    deviceSelect,
     generateButton,
     setStatus,
     setGenerateLoading,
