@@ -1,6 +1,7 @@
 import './styles.css';
 import { createModelRegistry } from './models/model-registry.js';
 import { createIsnetOnnx } from './models/isnet-onnx.js';
+import { createRmbg14 } from './models/rmbg-14.js';
 import { createUI } from './ui.js';
 import { createNetworkLed } from './network-led.js';
 import { registerServiceWorker } from './pwa.js';
@@ -10,6 +11,7 @@ const networkLed = createNetworkLed(ui.setNetworkState);
 const registry = createModelRegistry();
 
 registry.registerModel(createIsnetOnnx);
+registry.registerModel(createRmbg14);
 
 const availableModels = registry.getAvailableModels();
 ui.setModelOptions(availableModels.map((m) => ({ value: m.name, label: m.name })));
