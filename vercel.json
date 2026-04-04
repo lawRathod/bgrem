@@ -5,13 +5,19 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/bgrem",
+      "destination": "/bgrem/",
       "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/bgrem/:path*",
+      "destination": "/bgrem/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/bgrem/(.*)",
       "headers": [
         {
           "key": "Cross-Origin-Opener-Policy",
