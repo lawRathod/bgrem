@@ -1,6 +1,6 @@
 const APP_CACHE = 'mask-app-v2';
 const MODEL_CACHE = 'mask-model-v2';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.svg', '/icons/icon-512.svg'];
+const APP_SHELL = ['./', './manifest.webmanifest', './icons/icon-192.svg', './icons/icon-512.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(APP_CACHE).then((cache) => cache.addAll(APP_SHELL)));
@@ -71,7 +71,7 @@ async function networkFirst(request, cacheName) {
     }
 
     if (request.mode === 'navigate') {
-      const fallback = await cache.match('/');
+      const fallback = await cache.match('./');
       if (fallback) {
         return fallback;
       }

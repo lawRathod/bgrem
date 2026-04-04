@@ -2,7 +2,7 @@
   "name": "Background Mask Generator",
   "short_name": "MaskGen",
   "description": "Generate mask.png locally in your browser from uploaded images.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f2f5ef",
   "theme_color": "#1f7a51",

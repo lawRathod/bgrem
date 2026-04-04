@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: '/bgrem/',
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
