@@ -2,6 +2,7 @@ export function createUI() {
   const imageInput = document.getElementById('imageInput');
   const imageUrlInput = document.getElementById('imageUrlInput');
   const loadUrlButton = document.getElementById('loadUrlButton');
+  const modelSelect = document.getElementById('modelSelect');
   const generateButton = document.getElementById('generateButton');
   const statusElement = document.getElementById('status');
   const sourcePreview = document.getElementById('sourcePreview');
@@ -103,10 +104,33 @@ export function createUI() {
     networkLabel.textContent = label;
   }
 
+  function setModelOptions(models) {
+    if (!modelSelect) {
+      return;
+    }
+
+    modelSelect.innerHTML = '';
+    models.forEach((model) => {
+      const option = document.createElement('option');
+      option.value = model.value;
+      option.textContent = model.label;
+      modelSelect.appendChild(option);
+    });
+  }
+
+  function setModelValue(value) {
+    if (!modelSelect) {
+      return;
+    }
+
+    modelSelect.value = value;
+  }
+
   return {
     imageInput,
     imageUrlInput,
     loadUrlButton,
+    modelSelect,
     generateButton,
     setStatus,
     setGenerateLoading,
@@ -115,5 +139,7 @@ export function createUI() {
     setMask,
     clearMask,
     setNetworkState,
+    setModelOptions,
+    setModelValue,
   };
 }

@@ -1,11 +1,23 @@
 import './styles.css';
-import { createMaskFromImageUrl, getSegmenter } from './segmenter';
-import { createUI } from './ui';
-import { createNetworkLed } from './network-led';
-import { registerServiceWorker } from './pwa';
+import { createModelRegistry } from './models/model-registry.js';
+import { createIsnetOnnx } from './models/isnet-onnx.js';
+import { createUI } from './ui.js';
+import { createNetworkLed } from './network-led.js';
+import { registerServiceWorker } from './pwa.js';
 
 const ui = createUI();
 const networkLed = createNetworkLed(ui.setNetworkState);
+const registry = createModelRegistry();
+
+registry.registerModel(createIsnetOnnx);
+
+const availableModels = registry.getAvailableModels();
+ui.setModelOptions(availableModels.map((m) => ({ value: m.name, label: m.name })));
+ui.setModelValue(registry.getSelectedModel());
+
+ui.modelSelect?.addEventListener('change', () => {
+  registry.selectModel(ui.modelSelect.value);
+});
 
 let selectedImageURL = '';
 
@@ -98,13 +110,13 @@ ui.generateButton?.addEventListener('click', async () => {
   ui.clearMask();
 
   try {
-    ui.setStatus('Loading segmentation model...');
-    await getSegmenter();
-    ui.setStatus('Running segmentation in your browser...');
-
-    const maskBlob = await createMaskFromImageUrl(selectedImageURL);
-    ui.setMask(maskBlob);
+    ui.setStatus('Loading model...');
+    await registry.init();
     networkLed.markOfflineReady();
+    ui.setStatus('Running inference in your browser...');
+
+    const maskBlob = await registry.run(selectedImageURL);
+    ui.setMask(maskBlob);
     ui.setStatus('Done. Preview updated and mask.png is ready to download.');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

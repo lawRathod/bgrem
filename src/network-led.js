@@ -1,11 +1,17 @@
 export function createNetworkLed(setState) {
   let pendingRequests = 0;
+  let offlineReady = false;
 
   const originalFetch = window.fetch.bind(window);
 
   const refresh = () => {
     if (pendingRequests > 0) {
       setState('loading', 'Network: fetching');
+      return;
+    }
+
+    if (offlineReady) {
+      setState('offline-ready', 'Network: offline-ready');
       return;
     }
 
