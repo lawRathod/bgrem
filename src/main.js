@@ -12,6 +12,8 @@ import { registerServiceWorker } from './pwa.js';
 
 env.allowLocalModels = false;
 env.backends.onnx.wasm.proxy = true;
+env.backends.onnx.wasm.wasmPaths =
+  'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.0-dev.20251116-b39e144322/dist/';
 
 const ui = createUI();
 const networkLed = createNetworkLed(ui.setNetworkState);
