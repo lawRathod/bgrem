@@ -2,14 +2,11 @@
   "buildCommand": "bun run build",
   "outputDirectory": "dist",
   "installCommand": "bun install",
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/bgrem",
-      "destination": "/bgrem/"
-    },
-    {
-      "source": "/bgrem/:path*",
-      "destination": "/bgrem/:path*"
+      "source": "/",
+      "destination": "/bgrem/",
+      "permanent": false
     }
   ],
   "headers": [
