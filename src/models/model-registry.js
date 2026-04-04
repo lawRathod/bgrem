@@ -1,11 +1,16 @@
 export function createModelRegistry() {
   const factories = [];
+  const metadatas = new Map();
   let selectedName = null;
   let instance = null;
+  let loadTimeMs = null;
+  let inferenceTimeMs = null;
+  let imageSize = null;
 
-  function registerModel(createModel, options = {}) {
-    const model = createModel(options);
+  function registerModel(createModel, modelMeta) {
+    const model = createModel();
     factories.push(model);
+    metadatas.set(model.name, modelMeta);
 
     if (!selectedName) {
       selectedName = model.name;
@@ -14,6 +19,10 @@ export function createModelRegistry() {
 
   function getAvailableModels() {
     return factories.map((m) => ({ name: m.name }));
+  }
+
+  function getModelMeta(name) {
+    return metadatas.get(name) ?? null;
   }
 
   function selectModel(name) {
@@ -40,7 +49,7 @@ export function createModelRegistry() {
     const name = getSelectedModel();
 
     if (instance && instance.name === name) {
-      return;
+      return { loadTimeMs: loadTimeMs ?? 0, cached: true };
     }
 
     const factory = factories.find((m) => m.name === name);
@@ -49,7 +58,11 @@ export function createModelRegistry() {
     }
 
     instance = factory;
+    const t0 = performance.now();
     await instance.init();
+    loadTimeMs = performance.now() - t0;
+
+    return { loadTimeMs, cached: false };
   }
 
   async function run(imageUrl) {
@@ -57,20 +70,49 @@ export function createModelRegistry() {
       throw new Error('Model not initialized. Call init() first.');
     }
 
-    return instance.run(imageUrl);
+    const t0 = performance.now();
+    const result = await instance.run(imageUrl);
+    inferenceTimeMs = performance.now() - t0;
+
+    return result;
+  }
+
+  function setImageSize(width, height) {
+    imageSize = { width, height };
+  }
+
+  function getMetrics() {
+    const name = getSelectedModel();
+    const modelMeta = metadatas.get(name);
+
+    return {
+      name,
+      modelId: modelMeta?.modelId ?? '',
+      license: modelMeta?.license ?? '',
+      specialty: modelMeta?.specialty ?? '',
+      loadTimeMs: loadTimeMs ?? 0,
+      inferenceTimeMs: inferenceTimeMs ?? 0,
+      imageSize,
+    };
   }
 
   function reset() {
     instance = null;
+    loadTimeMs = null;
+    inferenceTimeMs = null;
+    imageSize = null;
   }
 
   return {
     registerModel,
     getAvailableModels,
+    getModelMeta,
     selectModel,
     getSelectedModel,
     init,
     run,
+    setImageSize,
+    getMetrics,
     reset,
   };
 }

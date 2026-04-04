@@ -3,9 +3,9 @@ export function createUI() {
   const imageUrlInput = document.getElementById('imageUrlInput');
   const loadUrlButton = document.getElementById('loadUrlButton');
   const modelSelect = document.getElementById('modelSelect');
-  const deviceSelect = document.getElementById('deviceSelect');
   const generateButton = document.getElementById('generateButton');
   const statusElement = document.getElementById('status');
+  const modelInfo = document.getElementById('modelInfo');
   const sourcePreview = document.getElementById('sourcePreview');
   const maskPreview = document.getElementById('maskPreview');
   const previewSection = document.getElementById('previewSection');
@@ -127,12 +127,19 @@ export function createUI() {
     modelSelect.value = value;
   }
 
+  function setModelInfo(text) {
+    if (!modelInfo) {
+      return;
+    }
+
+    modelInfo.textContent = text;
+  }
+
   return {
     imageInput,
     imageUrlInput,
     loadUrlButton,
     modelSelect,
-    deviceSelect,
     generateButton,
     setStatus,
     setGenerateLoading,
@@ -143,5 +150,6 @@ export function createUI() {
     setNetworkState,
     setModelOptions,
     setModelValue,
+    setModelInfo,
   };
 }

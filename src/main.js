@@ -1,26 +1,34 @@
 import './styles.css';
+import { env, ModelRegistry } from '@huggingface/transformers';
 import { createModelRegistry } from './models/model-registry.js';
-import { createIsnetOnnx } from './models/isnet-onnx.js';
-import { createRmbg14 } from './models/rmbg-14.js';
-import { createModnet } from './models/modnet.js';
-import { createBirefnetLite } from './models/birefnet-lite.js';
-import { createBirefnet } from './models/birefnet.js';
+import { createIsnetOnnx, meta as isnetMeta } from './models/isnet-onnx.js';
+import { createRmbg14, meta as rmbgMeta } from './models/rmbg-14.js';
+import { createModnet, meta as modnetMeta } from './models/modnet.js';
+import { createBirefnetLite, meta as birefnetLiteMeta } from './models/birefnet-lite.js';
+import { createBirefnet, meta as birefnetMeta } from './models/birefnet.js';
 import { createUI } from './ui.js';
 import { createNetworkLed } from './network-led.js';
 import { registerServiceWorker } from './pwa.js';
+
+env.allowLocalModels = false;
+env.backends.onnx.wasm.proxy = true;
 
 const ui = createUI();
 const networkLed = createNetworkLed(ui.setNetworkState);
 const registry = createModelRegistry();
 
-let currentDevice = 'wasm';
+const modelEntries = [
+  { create: createIsnetOnnx, meta: isnetMeta },
+  { create: createRmbg14, meta: rmbgMeta },
+  { create: createModnet, meta: modnetMeta },
+  { create: createBirefnetLite, meta: birefnetLiteMeta },
+  { create: createBirefnet, meta: birefnetMeta },
+];
 
 function registerModels() {
-  registry.registerModel(createIsnetOnnx, { device: currentDevice });
-  registry.registerModel(createRmbg14, { device: currentDevice });
-  registry.registerModel(createModnet, { device: currentDevice });
-  registry.registerModel(createBirefnetLite, { device: currentDevice });
-  registry.registerModel(createBirefnet, { device: currentDevice });
+  for (const entry of modelEntries) {
+    registry.registerModel(entry.create, entry.meta);
+  }
 }
 
 registerModels();
@@ -33,12 +41,23 @@ ui.modelSelect?.addEventListener('change', () => {
   registry.selectModel(ui.modelSelect.value);
 });
 
-ui.deviceSelect?.addEventListener('change', () => {
-  currentDevice = ui.deviceSelect.value;
-  registry.reset();
-  registry.selectModel(ui.modelSelect.value);
-  ui.setStatus(`Device switched to ${currentDevice.toUpperCase()}. Click "Generate mask".`);
-});
+async function fetchModelSizes() {
+  const updatedLabels = availableModels.map((m) => {
+    const modelMeta = registry.getModelMeta(m.name);
+    const displayBytes = modelMeta?.estimatedSize;
+
+    if (displayBytes) {
+      const mb = (displayBytes / (1024 * 1024)).toFixed(0);
+      return { value: m.name, label: `${m.name} (${mb} MB)` };
+    }
+
+    return { value: m.name, label: m.name };
+  });
+
+  ui.setModelOptions(updatedLabels);
+}
+
+fetchModelSizes();
 
 let selectedImageURL = '';
 
@@ -121,6 +140,30 @@ ui.imageUrlInput?.addEventListener('keydown', (event) => {
 
 ui.setStatus('Select an image to begin.');
 
+function yieldToPaint() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+}
+
+function formatMs(ms) {
+  if (ms < 1000) {
+    return `${ms.toFixed(0)}ms`;
+  }
+
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(0)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
+}
+
 ui.generateButton?.addEventListener('click', async () => {
   if (!selectedImageURL) {
     ui.setStatus('Please select an image first.');
@@ -132,12 +175,24 @@ ui.generateButton?.addEventListener('click', async () => {
 
   try {
     ui.setStatus('Loading model...');
-    await registry.init();
+    await yieldToPaint();
+    const { cached } = await registry.init();
     networkLed.markOfflineReady();
     ui.setStatus('Running inference in your browser...');
 
     const maskBlob = await registry.run(selectedImageURL);
     ui.setMask(maskBlob);
+
+    const metrics = registry.getMetrics();
+    const parts = [
+      metrics.name,
+      cached ? '(cached)' : '',
+      `Loaded in ${formatMs(metrics.loadTimeMs)}`,
+      `Inference: ${formatMs(metrics.inferenceTimeMs)}`,
+      metrics.license,
+    ].filter(Boolean);
+
+    ui.setModelInfo(parts.join(' · '));
     ui.setStatus('Done. Preview updated and mask.png is ready to download.');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

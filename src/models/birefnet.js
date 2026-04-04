@@ -1,26 +1,24 @@
 import { AutoModel, AutoProcessor, RawImage } from '@huggingface/transformers';
 import { tensorMaskToBlob } from './shared.js';
 
-export function createBirefnet(options = {}) {
+export const meta = {
+  modelId: 'onnx-community/BiRefNet-ONNX',
+  task: 'image-segmentation',
+  license: 'MIT',
+  specialty: 'Highest quality',
+  estimatedSize: 973 * 1024 * 1024,
+};
+
+export function createBirefnet() {
   let model = null;
   let processor = null;
   let loadPromise = null;
 
-  const device = options.device ?? 'wasm';
-  const dtype = options.dtype ?? 'fp16';
-
   async function init() {
     if (!loadPromise) {
-      if (device === 'wasm') {
-        throw new Error('BiRefNet requires WebGPU. WASM backend is not supported due to memory constraints.');
-      }
-
       loadPromise = Promise.all([
-        AutoModel.from_pretrained('onnx-community/BiRefNet-ONNX', {
-          device,
-          dtype,
-        }),
-        AutoProcessor.from_pretrained('onnx-community/BiRefNet-ONNX'),
+        AutoModel.from_pretrained(meta.modelId, { dtype: 'fp32' }),
+        AutoProcessor.from_pretrained(meta.modelId),
       ]);
     }
 

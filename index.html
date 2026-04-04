@@ -65,13 +65,6 @@
                         <span>Model</span>
                         <select id="modelSelect"></select>
                     </label>
-                    <label class="device-selector">
-                        <span>Device</span>
-                        <select id="deviceSelect">
-                            <option value="wasm">WASM</option>
-                            <option value="webgpu">WebGPU</option>
-                        </select>
-                    </label>
                     <button id="generateButton" type="button">
                         Generate mask
                     </button>
@@ -84,6 +77,7 @@
                 </div>
 
                 <p id="status" class="status">Select an image to begin.</p>
+                <p id="modelInfo" class="model-info" aria-live="polite"></p>
             </section>
 
             <section id="previewSection" class="preview-grid hidden">

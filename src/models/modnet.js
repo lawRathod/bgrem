@@ -2,18 +2,20 @@ import { env, pipeline } from '@huggingface/transformers';
 
 env.allowLocalModels = false;
 
-export function createModnet(options = {}) {
-  let segmenterPromise = null;
+export const meta = {
+  modelId: 'Xenova/modnet',
+  task: 'background-removal',
+  license: 'Apache 2.0',
+  specialty: 'Portraits & fashion',
+  estimatedSize: 25 * 1024 * 1024,
+};
 
-  const device = options.device ?? 'wasm';
-  const dtype = options.dtype ?? 'fp32';
+export function createModnet() {
+  let segmenterPromise = null;
 
   async function init() {
     if (!segmenterPromise) {
-      segmenterPromise = pipeline('background-removal', 'Xenova/modnet', {
-        device,
-        dtype,
-      });
+      segmenterPromise = pipeline(meta.task, meta.modelId);
     }
 
     await segmenterPromise;
