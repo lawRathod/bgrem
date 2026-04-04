@@ -21,8 +21,6 @@ const modelEntries = [
   { create: createIsnetOnnx, meta: isnetMeta },
   { create: createRmbg14, meta: rmbgMeta },
   { create: createModnet, meta: modnetMeta },
-  { create: createBirefnetLite, meta: birefnetLiteMeta },
-  { create: createBirefnet, meta: birefnetMeta },
 ];
 
 function registerModels() {
@@ -75,7 +73,6 @@ document.querySelectorAll('.mode-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     currentMode = btn.dataset.mode;
     ui.setMode(currentMode);
-    ui.clearMask();
     ui.setModelInfo('');
     if (currentMode === 'single') {
       ui.setStatus(selectedImageURL ? 'Image loaded. Click "Generate".' : 'Select an image to begin.');
@@ -98,7 +95,7 @@ function useSelectedImageBlob(blob, sourceLabel) {
   clearSelectedImageURL();
   selectedImageURL = URL.createObjectURL(blob);
   ui.setSourcePreview(selectedImageURL);
-  ui.clearMask();
+  ui.clearMasks();
   ui.setStatus(`${sourceLabel} loaded. Click "Generate".`);
 }
 
@@ -192,7 +189,6 @@ function formatBytes(bytes) {
 
 async function runSingleModel() {
   ui.setGenerateLoading(true);
-  ui.clearMask();
 
   try {
     ui.setStatus('Loading model…');
@@ -202,7 +198,7 @@ async function runSingleModel() {
     ui.setStatus('Running inference…');
 
     const maskBlob = await registry.run(selectedImageURL);
-    ui.setMask(maskBlob);
+    ui.addMaskCard(registry.getSelectedModel(), maskBlob);
 
     const metrics = registry.getMetrics();
     const parts = [
@@ -227,7 +223,7 @@ async function runBenchmark() {
   benchmarkResults = [];
   ui.setBenchmarkResults([]);
   ui.setGenerateLoading(true);
-  ui.clearMask();
+  ui.clearMasks();
 
   for (const entry of modelEntries) {
     const name = entry.create().name;
@@ -254,9 +250,7 @@ async function runBenchmark() {
         status: 'OK',
       });
 
-      if (name === registry.getSelectedModel()) {
-        ui.setMask(maskBlob);
-      }
+      ui.addMaskCard(name, maskBlob);
     } catch (error) {
       const totalMs = performance.now() - t0;
       const message = error instanceof Error ? error.message : String(error);

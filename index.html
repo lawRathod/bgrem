@@ -64,10 +64,7 @@
                     <span class="preview-tag">Original</span>
                     <img id="sourcePreview" class="preview-img" alt="Original" />
                 </div>
-                <div id="maskCard" class="preview hidden">
-                    <span class="preview-tag">Mask</span>
-                    <img id="maskPreview" class="preview-img" alt="Mask" />
-                </div>
+                <div id="maskResults" class="mask-results"></div>
             </section>
 
             <section id="benchmarkSection" class="benchmark hidden">
@@ -93,6 +90,11 @@
                 </div>
             </section>
         </main>
+
+        <div id="zoomOverlay" class="zoom-overlay hidden">
+            <button id="zoomClose" class="zoom-close" aria-label="Close zoom">×</button>
+            <img id="zoomImage" class="zoom-image" alt="Zoomed preview" />
+        </div>
 
         <script type="module" src="/src/main.js"></script>
     </body>

@@ -237,17 +237,28 @@ body {
   cursor: wait;
 }
 
-.download-btn {
+.mask-dl {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
   display: inline-flex;
   align-items: center;
-  height: 2.5rem;
-  padding: 0 1rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--accent);
+  justify-content: center;
+  background: var(--surface);
+  color: var(--ink);
   text-decoration: none;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.preview:hover .mask-dl {
+  opacity: 1;
 }
 
 .status {
@@ -274,11 +285,19 @@ body {
   margin-bottom: 2rem;
 }
 
+.mask-results {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
 .preview {
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
   background: var(--surface);
+  position: relative;
 }
 
 .preview-tag {
@@ -297,6 +316,55 @@ body {
   aspect-ratio: 4 / 3;
   object-fit: contain;
   padding: 0.5rem 0.75rem 0.75rem;
+  cursor: zoom-in;
+}
+
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  padding: 2rem;
+}
+
+.zoom-overlay.active {
+  display: flex;
+}
+
+.zoom-image {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 1001;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.zoom-close:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .benchmark {
