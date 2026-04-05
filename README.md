@@ -38,8 +38,14 @@ The app includes:
 ## Project structure
 
 - `index.html` - app shell and page markup
-- `src/main.js` - app wiring and user interactions
-- `src/segmenter.js` - model loading and mask generation
+- `src/main.js` - app wiring, model registry, and user interactions
+- `src/models/model-registry.js` - model selection, initialization, and metrics
+- `src/models/shared.js` - shared model utilities
+- `src/models/isnet-onnx.js` - ISNet-ONNX model
+- `src/models/rmbg-14.js` - RMBG-1.4 model
+- `src/models/modnet.js` - MODNet model
+- `src/models/birefnet-lite.js` - BiRefNet-Lite model
+- `src/models/birefnet.js` - BiRefNet model
 - `src/network-led.js` - internet/offline LED states
 - `src/ui.js` - DOM state management
 - `src/styles.css` - UI styling
